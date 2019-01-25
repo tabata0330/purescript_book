@@ -19,12 +19,13 @@ $ git clone git@github.com:tabata0330/purescript_book.git
 クローンして
 
 ```
-$ cd purescript_book
+$ cd purescript_book/ver0.11/chap3
 $ psc-package updates
-$ pulp --psc-package run
+$ psc-package install
+$ pulp --psc-package build
 ```
 
-で動くと思いますが、書き換えたりしたら
+でビルドできます。書き換えたりしたら
 
 ```
 $ pulp test
