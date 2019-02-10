@@ -28,11 +28,10 @@ even 1 = false
 even digit = even (digit - 2)
 
 -- 演習4.4-2
-numContainEven :: Array Int -> Int
-numContainEven arr =
+contaionEvenNum :: Array Int -> Int
+contaionEvenNum arr =
   if null arr
     then 0
     else if even (unsafePartial head arr)
-      then 1 + numContainEven (unsafePartial tail arr)
-      else numContainEven (unsafePartial tail arr)
-
+      then 1 + contaionEvenNum (unsafePartial tail arr)
+      else contaionEvenNum (unsafePartial tail arr)
