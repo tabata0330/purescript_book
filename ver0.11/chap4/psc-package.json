@@ -7,9 +7,12 @@
     "console",
     "eff",
     "foldable-traversable",
+    "lists",
     "maybe",
+    "pathy",
     "prelude",
     "psci-support",
-    "strings"
+    "strings",
+    "typelevel-prelude"
   ]
 }
