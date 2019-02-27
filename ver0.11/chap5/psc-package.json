@@ -9,6 +9,7 @@
     "foldable-traversable",
     "globals",
     "math",
+    "maybe",
     "partial",
     "prelude",
     "psci-support"
