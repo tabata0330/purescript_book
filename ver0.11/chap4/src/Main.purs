@@ -3,7 +3,7 @@ module Main where
 import Prelude
 
 import Control.MonadZero (guard)
-import Data.Array (filter, null, (..), concatMap, cons)
+import Data.Array (concat, filter, null, (..), concatMap, cons)
 import Data.Array.Partial (head, tail)
 import Data.Foldable (product, foldl)
 import Partial.Unsafe (unsafePartial)
@@ -120,6 +120,10 @@ getLast arr =
 --     o <- factorization (getLast m)
 --     guard $ ((length (filter (\i -> (i < unsafePartial head m)) o)) > 0)
 --     cons (unsafePartial head m) o
+
+-- 一応これが正解っぽい…。納得いかないけど。
+factorizations :: Int -> Array Int
+factorizations num = concat $ factors num
 
 -- reverse関数
 -- reverse :: forall a. Array a -> Array a
