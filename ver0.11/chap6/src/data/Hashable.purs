@@ -3,14 +3,16 @@ module Data.Hashable where
 import Data.Either
 import Data.Function
 import Data.Maybe
-import Data.String
 import Data.Tuple
 import Math
 import Prelude
-import Data.Array (cons)
 
-import Data.Foldable (class Foldable, foldMap, foldl, foldr)
+import Data.Array (cons)
+import Data.Array.Partial (head, tail)
+import Data.Foldable (class Foldable, foldMap, foldl, foldr, maximum)
 import Data.Monoid (class Monoid, mempty)
+import Partial.Unsafe (unsafePartial)
+import Stream (class Stream, uncons)
 
 -- 6.3
 data Shape
@@ -175,3 +177,54 @@ instance foldableOneMore :: Foldable f => Foldable (OneMore f) where
   foldr f z (OneMore _ b) = foldr f z b
   foldl f z (OneMore _ b) = foldl f z b
   foldMap f (OneMore _ b) = foldMap f b
+
+foldStream :: forall l e m. Stream l e => Monoid m => (e -> m) -> l -> m
+foldStream f list =
+  case uncons list of
+    Nothing -> mempty
+    Just cons -> f cons.head <> foldStream f cons.tail
+
+secondElement :: forall a. Partial => Array a -> a
+secondElement xs = head (tail xs)
+
+-- 演習6.11-1
+maxValue :: Partial => Array Int -> Int
+maxValue arr = 
+  case maximum arr of
+    Nothing -> 0
+    Just int -> int
+
+-- 演習6.11-2
+newtype Multiply = Multiply Int
+
+instance semigroupMultiply :: Semigroup Multiply where
+  append (Multiply n) (Multiply m) = Multiply (n * m)
+
+instance monoidMultiply :: Monoid Multiply where
+  mempty = Multiply 1
+
+instance showMultiply :: Show Multiply where
+  show (Multiply i) = show i
+
+class Monoid m <= Action m a where
+  act :: m -> a -> a
+
+instance repeatAction :: Action Multiply String where
+  act (Multiply i) str = fuga (Multiply i) str "" where
+    fuga (Multiply i) str result
+      | i == 0 = result
+      | otherwise = fuga (Multiply (i - 1)) str (result <> str)
+
+-- 演習6.11-3
+instance actionArray :: Action m a => Action m (Array a) where
+  act m arr = map (\a -> act m a) arr
+
+-- 演習6.11-4
+-- 題意が謎
+newtype Self m = Self m
+
+instance semigroupSelf :: Semigroup n => Semigroup (Self n) where
+  append (Self n) (Self m) = Self (n <> m) 
+
+instance actionSelf :: Monoid m => Action m (Self m) where
+  act m a = a <> a
