@@ -7,10 +7,12 @@ import Data.Tuple
 import Math
 import Prelude
 
-import Data.Array (cons)
+import Data.Array (cons, nubBy)
 import Data.Array.Partial (head, tail)
+import Data.Char (toCharCode)
 import Data.Foldable (class Foldable, foldMap, foldl, foldr, maximum)
 import Data.Monoid (class Monoid, mempty)
+import Data.String (toCharArray)
 import Partial.Unsafe (unsafePartial)
 import Stream (class Stream, uncons)
 
@@ -228,3 +230,64 @@ instance semigroupSelf :: Semigroup n => Semigroup (Self n) where
 
 instance actionSelf :: Monoid m => Action m (Self m) where
   act m a = a <> a
+
+newtype HashCode = HashCode Int
+
+hashCode :: Int -> HashCode
+hashCode h = HashCode (h `mod` 65535)
+
+instance showHashCode :: Show HashCode where
+  show (HashCode i) = show i
+
+class Eq a <= Hashable a where
+  hash :: a -> HashCode
+
+instance eqHashCode :: Eq HashCode where
+  eq (HashCode i) (HashCode j) = i == j
+
+combineHashes :: HashCode -> HashCode -> HashCode
+combineHashes (HashCode h1) (HashCode h2) = hashCode (73 * h1 + 51 * h2)
+
+hashEqual :: forall a. Hashable a => a -> a -> Boolean
+hashEqual = eq `on` hash
+
+instance hashInt :: Hashable Int where
+  hash i = hashCode i
+
+instance hashBoolean :: Hashable Boolean where
+  hash true = hashCode 1
+  hash false = hashCode 0
+
+instance hashChar :: Hashable Char where
+  hash char = hash $ (toCharCode char)
+
+instance hashArray :: Hashable a => Hashable (Array a) where
+  hash arr = foldl combineHashes (hashCode 0) (map hash arr)
+
+instance hashString :: Hashable String where
+  hash arr = hash $ (toCharArray arr)
+
+-- 演習6.12-2
+nubByHash :: forall a. Hashable a => Array a -> Array a
+nubByHash arr = nubBy hashEqual arr
+
+-- 演習6.12-3
+newtype Hour = Hour Int
+
+instance eqHour :: Eq Hour where
+  eq (Hour n) (Hour m) = mod n 12 == mod m 12
+
+instance hashHour :: Hashable Hour where
+  hash (Hour n) = hash (mod n 12) 
+
+instance hashMaybe :: (Hashable a) => Hashable (Maybe a) where
+  hash Nothing = (hash 0)
+  hash (Just a) = combineHashes (hash 1) (hash a)
+
+instance hashTuple :: (Hashable a, Hashable b) => Hashable (Tuple a b) where
+  hash (Tuple a b) = combineHashes (hash a) (hash b)
+
+instance hashEither :: (Hashable a, Hashable b) => Hashable (Either a b) where
+  hash (Left a) = combineHashes (hash 0) (hash a)
+  hash (Right b) = combineHashes (hash 1) (hash b)
+  
