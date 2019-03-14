@@ -6,7 +6,7 @@ import Data.List
 import Data.Maybe
 import Data.String
 import Data.String.Regex
-import Data.Validation.Semigroup
+import Data.Validation.Semigroup 
 import Prelude
 
 import Control.Apply (lift2, (<*>))
@@ -17,6 +17,7 @@ import Data.Int (radix)
 import Data.String.CodePoints (length)
 import Data.String.Regex.Flags (RegexFlags(..), noFlags)
 import Partial.Unsafe (unsafePartial)
+import Data.Traversable(traverse)
 
 withError :: (Maybe String) -> String -> (Either String String)
 withError Nothing err = Left err
@@ -95,3 +96,35 @@ validateAddress (Address o) =
   address <$> (matches "Street" blankRegex o.street  *> pure o.street)
           <*> (matches "City" blankRegex   o.city    *> pure o.city)
           <*> (matches "State" stateRegex o.state *> pure o.state)
+
+arrayNonEmpty :: forall a. String -> Array a -> V Errors Unit
+arrayNonEmpty field [] =
+  invalid ["Field '" <> field <> "' must contain at least one value"]
+arrayNonEmpty _ _ =
+  pure unit
+
+-- validatePerson :: Person -> V Errors Person
+-- validatePerson (Person o) =
+--   person <$> (nonEmpty "First Name" o.firstName *>
+--               pure o.firstName)
+--          <*> (nonEmpty "Last Name" o.lastName *>
+--               pure o.lastName)
+--          <*> validateAddress o.address
+--          <*> (arrayNonEmpty "Phone Numbers" o.phones *>
+--               traverse validatePhoneNumber o.phones)
+
+-- 演習7.11-1
+data Tree a = Leaf | Branch (Tree a) a (Tree a)
+
+--演習7.11-2
+--personの定義諸々変更。addressでMaybeを指定できるようにした。
+--これで正しいか自身はない。
+validatePerson :: Person -> V Errors Person
+validatePerson (Person o) =
+  person <$> (nonEmpty "First Name" o.firstName *>
+              pure o.firstName)
+         <*> (nonEmpty "Last Name" o.lastName *>
+              pure o.lastName)
+         <*> traverse validateAddress o.address
+         <*> (arrayNonEmpty "Phone Numbers" o.phones *>
+              traverse validatePhoneNumber o.phones)
